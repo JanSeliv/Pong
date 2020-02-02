@@ -14,7 +14,7 @@ void APongPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	InputComponent->BindAxis("MoveForward", this, &APongPlayerController::MoveUpDown);
+	InputComponent->BindAxis("MoveUpDown", this, &APongPlayerController::MoveUpDown);
 }
 
 // Move the player character by the forward vector.
@@ -26,22 +26,22 @@ void APongPlayerController::MoveUpDown(float ScaleValue)
 	}
 	else  // is the client
 	{
-		ServerMoveDown(ScaleValue);
+		Server_MoveDown(ScaleValue);
 	}
 }
 
 // Move the player on the server and replicate it on the client.
-void APongPlayerController::ServerMoveDown_Implementation(float ScaleValue)
+void APongPlayerController::Server_MoveDown_Implementation(float ScaleValue)
 {
 }
 
 //
-bool APongPlayerController::ServerMoveDown_Validate(float ScaleValue)
+bool APongPlayerController::Server_MoveDown_Validate(float ScaleValue)
 {
 	return true;
 }
 
 //
-void APongPlayerController::BroadcastMoveDown_Implementation(float ScaleValue)
+void APongPlayerController::Multicast_MoveDown_Implementation(float ScaleValue)
 {
 }

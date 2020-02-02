@@ -28,9 +28,9 @@ protected:
 
 	/** Move the player on the server and replicate it on the client. */
 	UFUNCTION(BlueprintCallable, Server, Unreliable, WithValidation)
-	void ServerMoveDown(float ScaleValue);
+	void Server_MoveDown(float ScaleValue);
 
 	/** */
 	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable)
-	void BroadcastMoveDown(float ScaleValue);
+	void Multicast_MoveDown(float ScaleValue);
 };
