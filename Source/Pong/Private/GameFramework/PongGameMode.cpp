@@ -3,15 +3,17 @@
 #include "GameFramework/PongGameMode.h"
 //---
 #include "GameFramework/PongGameState.h"
+#include "GameFramework/PongPawn.h"
 #include "GameFramework/PongPlayerController.h"
+#include "UI/PongHUD.h"
 
 // Default constructor.
 APongGameMode::APongGameMode()
 {
 	GameStateClass = APongGameState::StaticClass();
 	PlayerControllerClass = APongPlayerController::StaticClass();
-	// HUDClass = APongHUD::GetClass();
-	// DefaultPawnClass = APongPawn::GetClass();
+	HUDClass = APongHUD::StaticClass();
+	DefaultPawnClass = APongPawn::StaticClass();
 }
 
 // Return the 'best' player start for this player to spawn.
