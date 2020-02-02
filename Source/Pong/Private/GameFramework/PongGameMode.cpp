@@ -1,11 +1,13 @@
 ﻿// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "GameFramework/PongGameMode.h"
+//---
+#include "GameFramework/PongGameState.h"
 
 // Default constructor.
 APongGameMode::APongGameMode()
 {
-	// GameStateClass = APongGameState::GetClass()
+	GameStateClass = APongGameState::StaticClass();
 	// PlayerControllerClass = APongPlayerController::GetClass();
 	// HUDClass = APongHUD::GetClass();
 	// DefaultPawnClass = APongPawn::GetClass();
