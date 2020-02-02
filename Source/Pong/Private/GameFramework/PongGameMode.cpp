@@ -3,12 +3,13 @@
 #include "GameFramework/PongGameMode.h"
 //---
 #include "GameFramework/PongGameState.h"
+#include "GameFramework/PongPlayerController.h"
 
 // Default constructor.
 APongGameMode::APongGameMode()
 {
 	GameStateClass = APongGameState::StaticClass();
-	// PlayerControllerClass = APongPlayerController::GetClass();
+	PlayerControllerClass = APongPlayerController::StaticClass();
 	// HUDClass = APongHUD::GetClass();
 	// DefaultPawnClass = APongPawn::GetClass();
 }
