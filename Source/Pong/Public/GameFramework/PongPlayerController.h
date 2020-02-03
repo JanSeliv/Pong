@@ -19,6 +19,9 @@ public:
 	APongPlayerController();
 
 protected:
+	/** Called when the game starts or when spawned. */
+	virtual void BeginPlay() override;
+
 	/** Allows the PlayerController to set up custom input bindings. */
 	virtual void SetupInputComponent() override;
 

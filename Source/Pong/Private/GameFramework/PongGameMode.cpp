@@ -6,6 +6,10 @@
 #include "GameFramework/PongPawn.h"
 #include "GameFramework/PongPlayerController.h"
 #include "UI/PongHUD.h"
+//---
+#include "Engine/World.h"
+#include "EngineUtils.h"
+#include "GameFramework/PlayerStart.h"
 
 // Default constructor.
 APongGameMode::APongGameMode()
@@ -19,7 +23,21 @@ APongGameMode::APongGameMode()
 // Return the 'best' player start for this player to spawn.
 AActor* APongGameMode::ChoosePlayerStart_Implementation(AController* Player)
 {
-	return ChoosePlayerStart_Implementation(Player);
+	const FString Tag = PlayerControllerArr.Num() ? "Right" : "Left";
+	const auto NewPongController = Cast<APongPlayerController>(Player);
+	if (NewPongController)
+	{
+		PlayerControllerArr.Add(NewPongController);
+		return FindPlayerStart(Player, Tag);
+	}
+
+	return nullptr;
+}
+
+// Called when the game starts or when spawned.
+void APongGameMode::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 // Function called every frame.

@@ -23,6 +23,13 @@ public:
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 
 protected:
+	/** The array of each player start. */
+	UPROPERTY(BlueprintReadWrite)
+	TArray<class APongPlayerController*> PlayerControllerArr;
+
+	/** Called when the game starts or when spawned. */
+	virtual void BeginPlay() override;
+
 	/** Function called every frame.
 	 *	@param	DeltaSeconds	Game time elapsed during last frame modified by the time dilation. */
 	virtual void Tick(float DeltaSeconds) override;

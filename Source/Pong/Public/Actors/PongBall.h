@@ -15,9 +15,14 @@ class PONG_API APongBall : public AActor
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
+	/** Default constructor */
 	APongBall();
 
+	/** The root static mesh component of the Pong Ball. */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
+	class UStaticMeshComponent* MeshComponent;
+
+	/** Updates the position of the root static mesh component.*/
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	class UProjectileMovementComponent* MovementComponent;
 

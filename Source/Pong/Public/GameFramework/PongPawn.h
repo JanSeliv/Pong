@@ -19,6 +19,10 @@ public:
 	APongPawn();
 
 protected:
+	/** The root static mesh component of the Pong Pawn. */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
+	class UStaticMeshComponent* MeshComponent;
+
 	/** Called when the game starts or when spawned. */
 	virtual void BeginPlay() override;
 
