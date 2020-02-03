@@ -30,7 +30,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Server, Unreliable, WithValidation)
 	void Server_MoveDown(float ScaleValue);
 
-	/** */
+	/** Move the pawn on clients. */
 	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable)
 	void Multicast_MoveDown(float ScaleValue);
 };
