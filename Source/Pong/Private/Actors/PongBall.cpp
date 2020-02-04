@@ -19,10 +19,10 @@ APongBall::APongBall()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	MeshComponent->SetupAttachment(RootComponent);
 	MeshComponent->SetRelativeScale3D(FVector(0.1F, 0.1F, 0.1F));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshFinder(TEXT("/Engine/BasicShapes/Sphere"));
-	if (MeshFinder.Succeeded())
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_SphereFinder(TEXT("/Engine/BasicShapes/Sphere"));
+	if (SM_SphereFinder.Succeeded())
 	{
-		MeshComponent->SetStaticMesh(MeshFinder.Object);
+		MeshComponent->SetStaticMesh(SM_SphereFinder.Object);
 	}
 
 	// Initialize the Projectile Movement Component

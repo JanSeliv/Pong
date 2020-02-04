@@ -43,7 +43,7 @@ void APongPlayerController::MoveUpDown(float ScaleValue)
 {
 	if (GetLocalRole() == ROLE_Authority)  // is the server
 	{
-		// on the server
+		Multicast_MoveDown(ScaleValue);
 	}
 	else  // is the client
 	{
@@ -70,7 +70,7 @@ void APongPlayerController::Multicast_MoveDown_Implementation(float ScaleValue)
 	if (PawnObj)
 	{
 		FVector DeltaVector(FVector::ZeroVector);
-		DeltaVector.Z = GetWorld()->GetDeltaSeconds() * ScaleValue;
-		PawnObj->AddActorLocalOffset(DeltaVector);
+		DeltaVector.Z = GetWorld()->GetDeltaSeconds() * ScaleValue * SpeedSensitivity;
+		PawnObj->AddActorLocalOffset(DeltaVector, true);
 	}
 }

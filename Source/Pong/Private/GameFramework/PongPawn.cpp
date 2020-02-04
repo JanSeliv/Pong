@@ -3,8 +3,8 @@
 #include "GameFramework/PongPawn.h"
 //---
 #include "Components/StaticMeshComponent.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "UObject/ConstructorHelpers.h"
-
 // Default constructor.
 APongPawn::APongPawn()
 {
@@ -12,16 +12,25 @@ APongPawn::APongPawn()
 	PrimaryActorTick.bCanEverTick = false;
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
-	RootComponent = CreateDefaultSubobject<USceneComponent>("SceneComponent");
+	bAlwaysRelevant = true;
 
-	// Initialize the  root static mesh component of the Pong Pawn
+	// Initialize the  root static mesh component of the Pong Pawn.
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
-	MeshComponent->SetupAttachment(RootComponent);
+	RootComponent = MeshComponent;
 	MeshComponent->SetRelativeScale3D(FVector(0.6F, 0.2F, 1.0F));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshFinder(TEXT("/Engine/BasicShapes/Cube"));
-	if (MeshFinder.Succeeded())
+	//MeshComponent->SetLinearDamping(0.F);
+	//MeshComponent->SetEnableGravity(false);
+	//MeshComponent->SetConstraintMode(EDOFMode::SixDOF);
+	MeshComponent->SetCollisionProfileName(TEXT("Pawn"));
+	static ConstructorHelpers::FObjectFinder<UPhysicalMaterial> PM_PongFinder(TEXT("/Game/Materials/PM_Pong"));
+	if (PM_PongFinder.Succeeded())
 	{
-		MeshComponent->SetStaticMesh(MeshFinder.Object);
+		MeshComponent->SetPhysMaterialOverride(PM_PongFinder.Object);
+	}
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_CubeFinder(TEXT("/Engine/BasicShapes/Cube"));
+	if (SM_CubeFinder.Succeeded())
+	{
+		MeshComponent->SetStaticMesh(SM_CubeFinder.Object);
 	}
 }
 

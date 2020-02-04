@@ -19,6 +19,10 @@ public:
 	APongPlayerController();
 
 protected:
+	/** The speed of the pawn movement. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "C++")
+	float SpeedSensitivity = 300.F;
+
 	/** Called when the game starts or when spawned. */
 	virtual void BeginPlay() override;
 
@@ -26,14 +30,14 @@ protected:
 	virtual void SetupInputComponent() override;
 
 	/* Move the player character by the forward vector. */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "C++")
 	void MoveUpDown(float ScaleValue);
 
 	/** Move the player on the server and replicate it on the client. */
-	UFUNCTION(BlueprintCallable, Server, Unreliable, WithValidation)
+	UFUNCTION(BlueprintCallable, Server, Unreliable, WithValidation, Category = "C++")
 	void Server_MoveDown(float ScaleValue);
 
 	/** Move the pawn on clients. */
-	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable)
+	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable, Category = "C++")
 	void Multicast_MoveDown(float ScaleValue);
 };
