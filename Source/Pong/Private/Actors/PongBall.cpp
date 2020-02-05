@@ -115,9 +115,10 @@ void APongBall::NotifyHit(
 	// The location of the hit related to the pawn.
 	const FTransform RelativeHitLocation =
 		UKismetMathLibrary::MakeRelativeTransform(GetActorTransform(), Other->GetActorTransform());
+	const float RelativeHitHeight = RelativeHitLocation.GetLocation().Z * GetActorScale3D().Z;
 
 	// Signed the hit location to pawn (from -1.0 to 1.0, where the center is 0)
-	const float SignedHeight = RelativeHitLocation.GetLocation().Z / PongPawn->GetMeshHeight();
+	const float SignedHeight = RelativeHitHeight / PongPawn->GetMeshHeight();
 
 	// The new bouncing angle (in degrees) between ball and player.
 	const float AngleDeg = SignedHeight * MaxAngle;
