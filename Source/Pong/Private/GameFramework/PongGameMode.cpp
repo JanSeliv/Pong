@@ -21,18 +21,16 @@ APongGameMode::APongGameMode()
 	PongBallClass = APongBall::StaticClass();
 }
 
-// Return the 'best' player start for this player to spawn.
-AActor* APongGameMode::ChoosePlayerStart_Implementation(AController* Player)
+// Start the timer of the new round and reset the Pong Ball.
+void APongGameMode::NextRound() const
 {
-	const FString Tag = PlayerControllerArr.Num() ? "Right" : "Left";
-	const auto NewPongController = Cast<APongPlayerController>(Player);
-	if (NewPongController)
+	if (!PongBall)
 	{
-		PlayerControllerArr.Add(NewPongController);
-		return FindPlayerStart(Player, Tag);
+		return;
 	}
 
-	return nullptr;
+	PongBall->SetActorLocation(FVector::ZeroVector);
+	PongBall->Server_UpdateVelocity(true);
 }
 
 // Called when the game starts or when spawned.
@@ -47,6 +45,19 @@ void APongGameMode::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 }
 
+// Return the 'best' player start for this player to spawn.
+AActor* APongGameMode::ChoosePlayerStart_Implementation(AController* Player)
+{
+	const FString Tag = PlayerControllerArr.Num() ? "Right" : "Left";
+	const auto NewPongController = Cast<APongPlayerController>(Player);
+	if (NewPongController)
+	{
+		PlayerControllerArr.Add(NewPongController);
+		return FindPlayerStart(Player, Tag);
+	}
+
+	return nullptr;
+}
 // Returns true if ready to Start Match.
 bool APongGameMode::ReadyToStartMatch_Implementation()
 {
@@ -89,17 +100,8 @@ void APongGameMode::StartGame()
 {
 	if (!PongBall)
 	{
-		PongBall = GetWorld()->SpawnActor<APongBall>(PongBallClass, FTransform(FVector::ZeroVector));
-	}
-}
-
-// Start the timer of the new round and reset the Pong Ball.
-void APongGameMode::NextRound() const
-{
-	if (!PongBall)
-	{
-		return;
+		PongBall = GetWorld()->SpawnActor<APongBall>(PongBallClass);
 	}
 
-	PongBall->Server_UpdateVelocity(true);
+	NextRound();
 }

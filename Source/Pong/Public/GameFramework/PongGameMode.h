@@ -17,10 +17,9 @@ public:
 	/** Default constructor. */
 	APongGameMode();
 
-	/** Return the 'best' player start for this player to spawn.
-	 * @param Player is the controller for whom we are choosing a player start.
-	 * @returns AActor chosen as player start (usually a PlayerStart). */
-	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+	/** Start the timer of the new round and reset the Pong Ball. */
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, meta = (BlueprintProtected))
+	void NextRound() const;
 
 protected:
 	/** The array of each player start. */
@@ -40,6 +39,11 @@ protected:
 	/** Function called every frame.
 	 *	@param	DeltaSeconds	Game time elapsed during last frame modified by the time dilation. */
 	virtual void Tick(float DeltaSeconds) override;
+
+	/** Return the 'best' player start for this player to spawn.
+	 * @param Player is the controller for whom we are choosing a player start.
+	 * @returns AActor chosen as player start (usually a PlayerStart). */
+	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 
 	/** Returns true if ready to Start Match. */
 	virtual bool ReadyToStartMatch_Implementation() override;
@@ -62,8 +66,4 @@ protected:
 	/** Called when the game is started. */
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
 	void StartGame();
-
-	/** Start the timer of the new round and reset the Pong Ball. */
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, meta = (BlueprintProtected))
-	void NextRound() const;
 };
