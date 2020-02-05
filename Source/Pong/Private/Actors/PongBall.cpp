@@ -2,8 +2,12 @@
 
 #include "Actors/PongBall.h"
 //---
+#include "GameFramework/PongPawn.h"
+//---
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "UObject/ConstructorHelpers.h"
 
 // Sets default values
@@ -13,12 +17,12 @@ APongBall::APongBall()
 	PrimaryActorTick.bCanEverTick = false;
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
-	RootComponent = CreateDefaultSubobject<USceneComponent>("SceneComponent");
+	bAlwaysRelevant = true;
 
 	// Initialize the  root static mesh component of the Pong Ball
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
-	MeshComponent->SetupAttachment(RootComponent);
-	MeshComponent->SetRelativeScale3D(FVector(0.1F, 0.1F, 0.1F));
+	RootComponent = MeshComponent;
+	MeshComponent->SetRelativeScale3D(FVector(0.3F, 0.3F, 0.3F));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_SphereFinder(TEXT("/Engine/BasicShapes/Sphere"));
 	if (SM_SphereFinder.Succeeded())
 	{
@@ -26,15 +30,52 @@ APongBall::APongBall()
 	}
 
 	// Initialize the Projectile Movement Component
-	MovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MovementComponent"));
-	MovementComponent->InitialSpeed = 500.0F;
-	MovementComponent->MaxSpeed = 725.0F;
-	MovementComponent->Bounciness = 1.0F;
-	MovementComponent->Friction = 0.0F;
-	MovementComponent->ProjectileGravityScale = 0.0F;
-	MovementComponent->bConstrainToPlane = true;
-	MovementComponent->SetPlaneConstraintNormal(FVector::ForwardVector);
-	MovementComponent->SetPlaneConstraintOrigin(FVector::ZeroVector);
+	PongMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("PongMovementComponent"));
+	PongMovementComponent->InitialSpeed = 500.0F;
+	PongMovementComponent->MaxSpeed = 725.0F;
+	PongMovementComponent->bRotationFollowsVelocity = true;
+	PongMovementComponent->bShouldBounce = true;
+	PongMovementComponent->Bounciness = 1.0F;
+	PongMovementComponent->Friction = 0.0F;
+	PongMovementComponent->ProjectileGravityScale = 0.0F;
+	PongMovementComponent->SetPlaneConstraintNormal(FVector::ForwardVector);
+	PongMovementComponent->SetPlaneConstraintOrigin(FVector::ZeroVector);
+	PongMovementComponent->bConstrainToPlane = true;
+	PongMovementComponent->SetPlaneConstraintAxisSetting(EPlaneConstraintAxisSetting::X);
+	MeshComponent->SetCollisionProfileName(TEXT("BlockAll"));
+	static ConstructorHelpers::FObjectFinder<UPhysicalMaterial> PM_PongFinder(TEXT("/Game/Materials/PM_Pong"));
+	if (PM_PongFinder.Succeeded())
+	{
+		MeshComponent->SetPhysMaterialOverride(PM_PongFinder.Object);
+	}
+
+	// rand the initial direction
+	CurrentDirection = FMath::RandBool() ? FVector::RightVector : FVector::LeftVector;
+}
+
+// Set the velocity to the pong ball movement component.
+void APongBall::Server_UpdateVelocity_Implementation(bool bRandNewDirection)
+{
+	if (!PongMovementComponent)
+	{
+		return;
+	}
+
+	if (bRandNewDirection)
+	{
+		CurrentDirection = CurrentDirection.GetSignVector();
+		const float AngleDeg = FMath::RandRange(0.F, 75.F);
+		CurrentDirection *= FVector(0.F,
+			UKismetMathLibrary::DegCos(AngleDeg),
+			UKismetMathLibrary::DegSin(AngleDeg));
+	}
+
+	PongMovementComponent->Velocity = CurrentDirection * PongMovementComponent->InitialSpeed;
+}
+
+bool APongBall::Server_UpdateVelocity_Validate(bool bRandNew)
+{
+	return true;
 }
 
 // Called when the game starts or when spawned
@@ -46,5 +87,46 @@ void APongBall::BeginPlay()
 	{
 		SetReplicates(true);
 		SetReplicateMovement(true);
+
+		Server_UpdateVelocity(true);
 	}
+}
+
+// Called when this Actor hits (or is hit by) something solid.
+void APongBall::NotifyHit(
+	UPrimitiveComponent* MyComp,
+	AActor* Other,
+	UPrimitiveComponent* OtherComp,
+	bool bSelfMoved,
+	FVector HitLocation,
+	FVector HitNormal,
+	FVector NormalImpulse,
+	const FHitResult& Hit)
+{
+	Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
+
+	const auto PongPawn = Cast<APongPawn>(Other);
+	if (!PongPawn			 // is not player
+		|| !HasAuthority())	 // is client
+	{
+		return;
+	}
+
+	// The location of the hit related to the pawn.
+	const FTransform RelativeHitLocation =
+		UKismetMathLibrary::MakeRelativeTransform(GetActorTransform(), Other->GetActorTransform());
+
+	// Signed the hit location to pawn (from -1.0 to 1.0, where the center is 0)
+	const float SignedHeight = RelativeHitLocation.GetLocation().Z / PongPawn->GetMeshHeight();
+
+	// The new bouncing angle (in degrees) between ball and player.
+	const float AngleDeg = SignedHeight * MaxAngle;
+
+	// The new ball direction
+	CurrentDirection = FVector(0.F,
+		UKismetMathLibrary::DegCos(AngleDeg),
+		UKismetMathLibrary::DegSin(AngleDeg));
+
+	// Set the velocity to the pong ball movement component.
+	Server_UpdateVelocity(false);
 }

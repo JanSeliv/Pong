@@ -24,8 +24,15 @@ public:
 
 protected:
 	/** The array of each player start. */
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, meta = (BlueprintProtected))
 	TArray<class APongPlayerController*> PlayerControllerArr;
+
+	/** Debug temporary class.*/
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (BlueprintProtected))
+	TSubclassOf<class APongBall> PongBallClass;
+
+	/** Store the pointer to the Pong Ball. */
+	class APongBall* PongBall;
 
 	/** Called when the game starts or when spawned. */
 	virtual void BeginPlay() override;
@@ -52,7 +59,11 @@ protected:
 	/** Called when a Controller with a PlayerState leaves the game or is destroyed. */
 	virtual void Logout(AController* Exiting) override;
 
-	/** Start the timer and spawn players. */
-	UFUNCTION(BlueprintCallable)
+	/** Called when the game is started. */
+	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
 	void StartGame();
+
+	/** Start the timer of the new round and reset the Pong Ball. */
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, meta = (BlueprintProtected))
+	void NextRound() const;
 };

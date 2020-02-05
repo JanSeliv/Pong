@@ -2,6 +2,7 @@
 
 #include "GameFramework/PongGameMode.h"
 //---
+#include "Actors/PongBall.h"
 #include "GameFramework/PongGameState.h"
 #include "GameFramework/PongPawn.h"
 #include "GameFramework/PongPlayerController.h"
@@ -9,7 +10,6 @@
 //---
 #include "Engine/World.h"
 #include "EngineUtils.h"
-#include "GameFramework/PlayerStart.h"
 
 // Default constructor.
 APongGameMode::APongGameMode()
@@ -18,6 +18,7 @@ APongGameMode::APongGameMode()
 	PlayerControllerClass = APongPlayerController::StaticClass();
 	HUDClass = APongHUD::StaticClass();
 	DefaultPawnClass = APongPawn::StaticClass();
+	PongBallClass = APongBall::StaticClass();
 }
 
 // Return the 'best' player start for this player to spawn.
@@ -67,6 +68,8 @@ void APongGameMode::RestartGame()
 void APongGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
+
+	StartGame();
 }
 
 // Called whenever this actor is being removed from a level.
@@ -81,7 +84,22 @@ void APongGameMode::Logout(AController* Exiting)
 	Super::Logout(Exiting);
 }
 
-// Start the timer and spawn players
+// Called when the game is started.
 void APongGameMode::StartGame()
 {
+	if (!PongBall)
+	{
+		PongBall = GetWorld()->SpawnActor<APongBall>(PongBallClass, FTransform(FVector::ZeroVector));
+	}
+}
+
+// Start the timer of the new round and reset the Pong Ball.
+void APongGameMode::NextRound() const
+{
+	if (!PongBall)
+	{
+		return;
+	}
+
+	PongBall->Server_UpdateVelocity(true);
 }

@@ -5,6 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "UObject/ConstructorHelpers.h"
+
 // Default constructor.
 APongPawn::APongPawn()
 {
@@ -17,10 +18,7 @@ APongPawn::APongPawn()
 	// Initialize the  root static mesh component of the Pong Pawn.
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	RootComponent = MeshComponent;
-	MeshComponent->SetRelativeScale3D(FVector(0.6F, 0.2F, 1.0F));
-	//MeshComponent->SetLinearDamping(0.F);
-	//MeshComponent->SetEnableGravity(false);
-	//MeshComponent->SetConstraintMode(EDOFMode::SixDOF);
+	MeshComponent->SetRelativeScale3D(FVector(0.6F, 0.2F, 1.F));
 	MeshComponent->SetCollisionProfileName(TEXT("Pawn"));
 	static ConstructorHelpers::FObjectFinder<UPhysicalMaterial> PM_PongFinder(TEXT("/Game/Materials/PM_Pong"));
 	if (PM_PongFinder.Succeeded())
@@ -44,18 +42,9 @@ void APongPawn::BeginPlay()
 		SetReplicates(true);
 		SetReplicateMovement(true);
 	}
-}
 
-// Called when this Actor hits (or is hit by) something solid.
-void APongPawn::NotifyHit(
-	UPrimitiveComponent* MyComp,
-	AActor* Other,
-	UPrimitiveComponent* OtherComp,
-	bool bSelfMoved,
-	FVector HitLocation,
-	FVector HitNormal,
-	FVector NormalImpulse,
-	const FHitResult& Hit)
-{
-	Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
+	if (MeshComponent)
+	{
+		MeshHeight = MeshComponent->Bounds.BoxExtent.Z;
+	}
 }

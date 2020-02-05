@@ -41,7 +41,7 @@ void APongPlayerController::SetupInputComponent()
 // Move the player character by the forward vector.
 void APongPlayerController::MoveUpDown(float ScaleValue)
 {
-	if (GetLocalRole() == ROLE_Authority)  // is the server
+	if (HasAuthority())	 // is the server
 	{
 		Multicast_MoveDown(ScaleValue);
 	}

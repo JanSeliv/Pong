@@ -18,6 +18,10 @@ public:
 	/** Default constructor. */
 	APongPawn();
 
+	/** Returns the pawn's mesh height. */
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE float GetMeshHeight() const { return MeshHeight; }
+
 protected:
 	/** The root static mesh component of the Pong Pawn. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
@@ -26,14 +30,7 @@ protected:
 	/** Called when the game starts or when spawned. */
 	virtual void BeginPlay() override;
 
-	/** Calls when the mesh component hits (or is hit by) something solid. */
-	virtual void NotifyHit(
-		class UPrimitiveComponent* MyComp,
-		AActor* Other,
-		class UPrimitiveComponent* OtherComp,
-		bool bSelfMoved,
-		FVector HitLocation,
-		FVector HitNormal,
-		FVector NormalImpulse,
-		const struct FHitResult& Hit) override;
+	/** The height of the pawn's mesh. */
+	UPROPERTY(BlueprintReadWrite, meta = (BlueprintProtected))
+	float MeshHeight;
 };
