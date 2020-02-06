@@ -21,7 +21,7 @@ public:
 protected:
 	/** The speed of the pawn movement. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "C++")
-	float SpeedSensitivity = 300.F;
+	float SpeedSensitivity = 1600.F;
 
 	/** Called when the game starts or when spawned. */
 	virtual void BeginPlay() override;

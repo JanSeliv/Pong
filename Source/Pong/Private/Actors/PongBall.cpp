@@ -22,17 +22,16 @@ APongBall::APongBall()
 	// Initialize the  root static mesh component of the Pong Ball
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	RootComponent = MeshComponent;
-	MeshComponent->SetRelativeScale3D(FVector(0.3F, 0.3F, 0.3F));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_SphereFinder(TEXT("/Engine/BasicShapes/Sphere"));
-	if (SM_SphereFinder.Succeeded())
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_PongBallFinder(TEXT("/Game/Meshes/SM_PongBoll"));
+	if (SM_PongBallFinder.Succeeded())
 	{
-		MeshComponent->SetStaticMesh(SM_SphereFinder.Object);
+		MeshComponent->SetStaticMesh(SM_PongBallFinder.Object);
 	}
 
 	// Initialize the Projectile Movement Component
 	PongMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("PongMovementComponent"));
-	PongMovementComponent->InitialSpeed = 500.0F;
-	PongMovementComponent->MaxSpeed = 725.0F;
+	PongMovementComponent->InitialSpeed = 2000.F;
+	PongMovementComponent->MaxSpeed = 2500.F;
 	PongMovementComponent->bRotationFollowsVelocity = true;
 	PongMovementComponent->bShouldBounce = true;
 	PongMovementComponent->Bounciness = 1.0F;
@@ -87,8 +86,6 @@ void APongBall::BeginPlay()
 	{
 		SetReplicates(true);
 		SetReplicateMovement(true);
-
-		Server_UpdateVelocity(true);
 	}
 }
 

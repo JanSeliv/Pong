@@ -25,7 +25,7 @@ void APongPlayerController::BeginPlay()
 	AActor* PongCameraActor = GetWorld()->SpawnActor(ACameraActor::StaticClass());
 	if (PongCameraActor)
 	{
-		PongCameraActor->SetActorLocation(FVector(-437.F, 0.F, 0.F));
+		PongCameraActor->SetActorLocation(FVector(-3700.F, 0.F, 0.F));
 		SetViewTarget(PongCameraActor);
 	}
 }
