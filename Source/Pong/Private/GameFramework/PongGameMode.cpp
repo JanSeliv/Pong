@@ -10,6 +10,8 @@
 //---
 #include "Engine/World.h"
 #include "EngineUtils.h"
+#include "TimerManager.h"
+#include "UObject/ConstructorHelpers.h"
 
 // Default constructor.
 APongGameMode::APongGameMode()
@@ -19,24 +21,40 @@ APongGameMode::APongGameMode()
 	HUDClass = APongHUD::StaticClass();
 	DefaultPawnClass = APongPawn::StaticClass();
 	PongBallClass = APongBall::StaticClass();
+
+#if WITH_EDITOR
+	if (GIsEditor)
+	{
+		static ConstructorHelpers::FClassFinder<AActor> BP_PongHUDFinder(TEXT("/Game/Blueprints/UI/BP_PongHUD"));
+		if (BP_PongHUDFinder.Succeeded())
+		{
+			HUDClass = BP_PongHUDFinder.Class;
+		}
+	}
+#endif
 }
 
-// Start the timer of the new round and reset the Pong Ball.
+// Start the timer before the OnRoundStarted event;
 void APongGameMode::NextRound() const
 {
-	if (!PongBall)
+	if (!PongGameState)
 	{
 		return;
 	}
 
-	PongBall->SetActorLocation(FVector::ZeroVector);
-	PongBall->Server_UpdateVelocity(true);
+	PongGameState->SetGameState(EGameState::Countdown);
+
+	// The APongGameMode::OnRoundStarted delay.
+	FTimerHandle CountdownTimer;
+	GetWorld()->GetTimerManager().SetTimer(CountdownTimer, this, &APongGameMode::OnRoundStarted, CountdownDelay);
 }
 
 // Called when the game starts or when spawned.
 void APongGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+
+	PongGameState = GetGameState<APongGameState>();
 }
 
 // Function called every frame.
@@ -80,7 +98,19 @@ void APongGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	StartGame();
+	if (!PongBall)
+	{
+		PongBall = GetWorld()->SpawnActor<APongBall>(PongBallClass);
+	}
+
+	if (PlayerControllerArr.Num() == PlayersCount)	// all player were connected
+	{
+		// Need to wait some time to fully players initializing.
+		FTimerHandle ServerDelayTimer;
+		FTimerDelegate ServerDelayLambda;
+		ServerDelayLambda.BindLambda([&] { NextRound(); });
+		GetWorld()->GetTimerManager().SetTimer(ServerDelayTimer, ServerDelayLambda, 1.F, false);
+	}
 }
 
 // Called whenever this actor is being removed from a level.
@@ -96,12 +126,8 @@ void APongGameMode::Logout(AController* Exiting)
 }
 
 // Called when the game is started.
-void APongGameMode::StartGame()
+void APongGameMode::OnRoundStarted()
 {
-	if (!PongBall)
-	{
-		PongBall = GetWorld()->SpawnActor<APongBall>(PongBallClass);
-	}
-
-	NextRound();
+	PongBall->SetActorLocation(FVector::ZeroVector);
+	PongBall->Server_UpdateVelocity(true);
 }

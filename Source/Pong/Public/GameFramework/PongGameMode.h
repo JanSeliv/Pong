@@ -17,7 +17,7 @@ public:
 	/** Default constructor. */
 	APongGameMode();
 
-	/** Start the timer of the new round and reset the Pong Ball. */
+	/** Start the timer that will call after d the APongGameMode::OnRoundStarted. */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, meta = (BlueprintProtected))
 	void NextRound() const;
 
@@ -27,10 +27,23 @@ protected:
 	TArray<class APongPlayerController*> PlayerControllerArr;
 
 	/** Debug temporary class.*/
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (BlueprintProtected))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	TSubclassOf<class APongBall> PongBallClass;
 
+	/** The APongGameMode::OnRoundStarted delay. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float CountdownDelay = 3.0F;
+
+	/** The required count of players to start. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 PlayersCount = 2;
+
+	/** Store the pointer to the Pong Game State. */
+	UPROPERTY(BlueprintReadWrite)
+	class APongGameState* PongGameState;
+
 	/** Store the pointer to the Pong Ball. */
+	UPROPERTY(BlueprintReadWrite)
 	class APongBall* PongBall;
 
 	/** Called when the game starts or when spawned. */
@@ -65,5 +78,5 @@ protected:
 
 	/** Called when the game is started. */
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
-	void StartGame();
+	void OnRoundStarted();
 };
