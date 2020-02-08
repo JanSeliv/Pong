@@ -53,7 +53,7 @@ APongBall::APongBall()
 //  Returns the APongBall::CurrentDirection property.
 FVector APongBall::GetCurrentDirection() const
 {
-	return PongMovementComponent ? PongMovementComponent->Velocity : FVector::ZeroVector;
+	return PongMovementComponent ? PongMovementComponent->Velocity.GetSafeNormal() : FVector::ZeroVector;
 }
 
 // Set the APongBall::CurrentDirection to the pong ball movement component.

@@ -18,7 +18,7 @@ public:
 	APongGameMode();
 
 	/** Start the timer that will call after d the APongGameMode::OnRoundStarted. */
-	UFUNCTION(BlueprintCallable, Category = "C++", meta = (BlueprintProtected))
+	UFUNCTION(BlueprintCallable, Category = "C++")
 	void NextRound();
 
 protected:
@@ -39,11 +39,8 @@ protected:
 	class APongGameState* PongGameState;
 
 	/** Store the pointer to the Pong Ball. */
-	UPROPERTY(BlueprintReadWrite, Category = "C++")
+	UPROPERTY()
 	class APongBall* PongBall;
-
-	/** Called when the game starts or when spawned. */
-	virtual void BeginPlay() override;
 
 	/** Function called every frame.
 	 *	@param	DeltaSeconds	Game time elapsed during last frame modified by the time dilation. */
@@ -71,6 +68,10 @@ protected:
 
 	/** Called when a Controller with a PlayerState leaves the game or is destroyed. */
 	virtual void Logout(AController* Exiting) override;
+
+	/** Called when all players were connected. */
+	UFUNCTION(BlueprintCallable, Category = "C++", meta = (BlueprintProtected))
+	void OnGameStarted();
 
 	/** Called when the game is started. */
 	UFUNCTION(BlueprintCallable, Category = "C++", meta = (BlueprintProtected))

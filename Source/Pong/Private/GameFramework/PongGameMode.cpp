@@ -42,7 +42,7 @@ void APongGameMode::NextRound()
 		return;
 	}
 
-	PongGameState->Server_SetGameState(EGameState::Countdown);
+	PongGameState->Server_SetGameState(EGameState::OnNextRound);
 
 	// The APongGameMode::OnRoundStarted delay.
 	if (PongGameState->GetCountdownDelay())
@@ -55,14 +55,6 @@ void APongGameMode::NextRound()
 	{
 		OnRoundStarted();
 	}
-}
-
-// Called when the game starts or when spawned.
-void APongGameMode::BeginPlay()
-{
-	Super::BeginPlay();
-
-	PongGameState = GetGameState<APongGameState>();
 }
 
 // Function called every frame.
@@ -106,18 +98,20 @@ void APongGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	if (!PongBall)
+	if (!NewPlayer)
 	{
-		PongBall = GetWorld()->SpawnActor<APongBall>(PongBallClass);
+		return;
 	}
 
-	if (PlayerControllerArr.Num() == PlayersCount)	// all player were connected
+	if (!PongBall)
 	{
-		// Need to wait some time to fully players initializing.
-		FTimerHandle ServerDelayTimer;
-		FTimerDelegate ServerDelayLambda;
-		ServerDelayLambda.BindLambda([&] { NextRound(); });
-		GetWorld()->GetTimerManager().SetTimer(ServerDelayTimer, ServerDelayLambda, 1.F, false);
+	}
+
+	const bool bIsSecondPlayer = PlayerControllerArr.Num() == PlayersCount;
+	ChangeName(NewPlayer, bIsSecondPlayer ? TEXT("Right") : TEXT("Left"), true);
+	if (bIsSecondPlayer)  // all player were connected
+	{
+		OnGameStarted();
 	}
 }
 
@@ -131,6 +125,23 @@ void APongGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void APongGameMode::Logout(AController* Exiting)
 {
 	Super::Logout(Exiting);
+}
+
+// Called when all players were connected.
+void APongGameMode::OnGameStarted()
+{
+	PongGameState = GetGameState<APongGameState>();
+	PongBall = GetWorld()->SpawnActor<APongBall>(PongBallClass);
+	if (ensureMsgf(PongGameState && PongBall, TEXT("APongGameMode::OnGameStarted failed")))
+	{
+		PongGameState->Server_SetPongBall(PongBall);
+	}
+
+	// Need to wait some time to fully players initializing.
+	FTimerHandle ServerDelayTimer;
+	FTimerDelegate ServerDelayLambda;
+	ServerDelayLambda.BindLambda([&] { NextRound(); });
+	GetWorld()->GetTimerManager().SetTimer(ServerDelayTimer, ServerDelayLambda, 1.F, false);
 }
 
 // Called when the game is started.

@@ -2,6 +2,10 @@
 
 #include "GameFramework/PongGameState.h"
 //---
+#include "Actors/PongBall.h"
+#include "GameFramework/PongGameMode.h"
+//---
+#include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
@@ -17,13 +21,34 @@ bool APongGameState::Server_SetGameState_Validate(EGameState NewGameState)
 	return true;
 }
 
+// Set the reference to the Pong Ball.
+void APongGameState::Server_SetPongBall_Implementation(APongBall* NewPongBall)
+{
+	PongBall = NewPongBall;
+}
+
+bool APongGameState::Server_SetPongBall_Validate(APongBall* NewPongBall)
+{
+	return true;
+}
+
+// Called when the game starts or when spawned.
+void APongGameState::BeginPlay()
+{
+	Super::BeginPlay();
+
+	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+	PongHUD = PC ? PC->GetHUD<APongHUD>() : nullptr;
+}
+
 // Called on the APongGameState::CurrentGameState property updating.
 void APongGameState::OnRep_CurrentGameState()
 {
 	switch (CurrentGameState)
 	{
-		case EGameState::Countdown:
+		case EGameState::OnNextRound:
 			Multicast_ShowCountdownWidget();
+			Multicast_AddScore();
 			break;
 		default:
 			break;
@@ -38,11 +63,29 @@ void APongGameState::Multicast_ShowCountdownWidget_Implementation() const
 		return;	 //don't show timer with zero duration
 	}
 
-	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-	const auto PongHUD = PC ? PC->GetHUD<APongHUD>() : nullptr;
 	if (PongHUD)
 	{
 		PongHUD->ShowCountdownWidget();
+	}
+}
+
+void APongGameState::Multicast_AddScore_Implementation() const
+{
+	const float YDirection = PongBall ? PongBall->GetCurrentDirection().Y : 0.F;
+	if (!YDirection	 //
+		|| !PongHUD)
+	{
+		return;
+	}
+
+	FString PlayerName = YDirection > 0 ? TEXT("Left") : TEXT("Right");
+	const int32 PlayerStateNo = PlayerArray.FindLastByPredicate(
+		[PlayerName](APlayerState* Player) { return Player && Player->GetPlayerName() == PlayerName; });
+
+	if (PlayerStateNo != INDEX_NONE)
+	{
+		PlayerArray[PlayerStateNo]->Score++;
+		PongHUD->UpdateScores();
 	}
 }
 
@@ -52,4 +95,5 @@ void APongGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(APongGameState, CurrentGameState);
+	DOREPLIFETIME(APongGameState, PongBall);
 }
