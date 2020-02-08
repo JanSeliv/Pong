@@ -7,6 +7,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Net/UnrealNetwork.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -31,7 +32,7 @@ APongBall::APongBall()
 	// Initialize the Projectile Movement Component
 	PongMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("PongMovementComponent"));
 	PongMovementComponent->InitialSpeed = 2000.F;
-	PongMovementComponent->MaxSpeed = 2500.F;
+	PongMovementComponent->MaxSpeed = 4000.F;
 	PongMovementComponent->bRotationFollowsVelocity = true;
 	PongMovementComponent->bShouldBounce = true;
 	PongMovementComponent->Bounciness = 1.0F;
@@ -47,34 +48,40 @@ APongBall::APongBall()
 	{
 		MeshComponent->SetPhysMaterialOverride(PM_PongFinder.Object);
 	}
-
-	// rand the initial direction
-	CurrentDirection = FMath::RandBool() ? FVector::RightVector : FVector::LeftVector;
 }
 
-// Set the velocity to the pong ball movement component.
-void APongBall::Server_UpdateVelocity_Implementation(bool bRandNewDirection)
+//  Returns the APongBall::CurrentDirection property.
+FVector APongBall::GetCurrentDirection() const
 {
-	if (!PongMovementComponent)
-	{
-		return;
-	}
-
-	if (bRandNewDirection)
-	{
-		CurrentDirection = CurrentDirection.GetSignVector();
-		const float AngleDeg = FMath::RandRange(0.F, 75.F);
-		CurrentDirection *= FVector(0.F,
-			UKismetMathLibrary::DegCos(AngleDeg),
-			UKismetMathLibrary::DegSin(AngleDeg));
-	}
-
-	PongMovementComponent->Velocity = CurrentDirection * PongMovementComponent->InitialSpeed;
+	return PongMovementComponent ? PongMovementComponent->Velocity : FVector::ZeroVector;
 }
 
-bool APongBall::Server_UpdateVelocity_Validate(bool bRandNew)
+// Set the APongBall::CurrentDirection to the pong ball movement component.
+void APongBall::Multicast_UpdateVelocity_Implementation(float AngleDeg, bool bLocateToCenter)
 {
-	return true;
+	if (!PongMovementComponent->Velocity.Size())
+	{
+		PongMovementComponent->Velocity = FMath::RandBool() ? FVector::RightVector : FVector::LeftVector;
+	}
+
+	if (bLocateToCenter)
+	{
+		SetActorLocation(FVector::ZeroVector);
+		PongMovementComponent->Velocity.Normalize();
+		PongMovementComponent->Velocity *= PongMovementComponent->InitialSpeed;
+	}
+
+	//---------
+
+	AngleDeg = FMath::ClampAngle(AngleDeg, -MaxAngle, MaxAngle);
+	FVector DirectionVector = FVector(0.F,
+		UKismetMathLibrary::DegCos(AngleDeg),
+		UKismetMathLibrary::DegSin(AngleDeg));
+	DirectionVector *= PongMovementComponent->Velocity.GetSignVector();
+	float LenMultiplier = FMath::Abs(PongMovementComponent->Velocity.Size());
+
+	// Updates the pong ball velocity of the movement component.
+	PongMovementComponent->Velocity = DirectionVector * LenMultiplier;
 }
 
 // Called when the game starts or when spawned
@@ -102,29 +109,46 @@ void APongBall::NotifyHit(
 {
 	Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
 
-	const auto PongPawn = Cast<APongPawn>(Other);
-	if (!PongPawn			 // is not player
-		|| !HasAuthority())	 // is client
+	if (!PongMovementComponent)
 	{
 		return;
 	}
 
-	// The location of the hit related to the pawn.
-	const FTransform RelativeHitLocation =
-		UKismetMathLibrary::MakeRelativeTransform(GetActorTransform(), Other->GetActorTransform());
-	const float RelativeHitHeight = RelativeHitLocation.GetLocation().Z * GetActorScale3D().Z;
+	// Increase the current velocity on APongBall::SpeedMultiplier() percent.
+	// The min value is PongMovementComponent->InitialSpeed.
+	// The max value is PongMovementComponent->MaxSpeed.
+	const FVector NormalizedVector(PongMovementComponent->Velocity.GetSafeNormal());  //1
+	const FVector PercVelocity = NormalizedVector * (PongMovementComponent->InitialSpeed * SpeedMultiplier);
+	const FVector IncreasedVelocity = PercVelocity + PongMovementComponent->Velocity;
+	if (IncreasedVelocity.Size() < PongMovementComponent->MaxSpeed)
+	{
+		PongMovementComponent->Velocity = IncreasedVelocity;
+	}
 
-	// Signed the hit location to pawn (from -1.0 to 1.0, where the center is 0)
-	const float SignedHeight = RelativeHitHeight / PongPawn->GetMeshHeight();
+	// Calculate new angle for player bouncing
+	const auto PongPawn = Cast<APongPawn>(Other);
+	if (PongPawn)  // is a player
+	{
+		// The location of the hit related to the pawn.
+		const FTransform RelativeHitLocation =
+			UKismetMathLibrary::MakeRelativeTransform(GetActorTransform(), Other->GetActorTransform());
+		const float RelativeHitHeight = RelativeHitLocation.GetLocation().Z * GetActorScale3D().Z;
 
-	// The new bouncing angle (in degrees) between ball and player.
-	const float AngleDeg = SignedHeight * MaxAngle;
+		// Signed the hit location to pawn (from -1.0 to 1.0, where the center is 0)
+		const float SignedHeight = RelativeHitHeight / PongPawn->GetMeshHeight();
 
-	// The new ball direction
-	CurrentDirection = FVector(0.F,
-		UKismetMathLibrary::DegCos(AngleDeg),
-		UKismetMathLibrary::DegSin(AngleDeg));
+		// The new bouncing angle (in degrees) between ball and player.
+		const float AngleDeg = SignedHeight * MaxAngle;
 
-	// Set the velocity to the pong ball movement component.
-	Server_UpdateVelocity(false);
+		// Set the velocity to the pong ball movement component.
+		Multicast_UpdateVelocity(AngleDeg);
+	}
+}
+
+// Returns properties that are replicated for the lifetime of the actor channel.
+void APongBall::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//DOREPLIFETIME(APongBall, );
 }

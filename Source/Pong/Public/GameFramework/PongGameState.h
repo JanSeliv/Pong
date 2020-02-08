@@ -8,7 +8,7 @@
 #include "PongGameState.generated.h"
 
 /**
- * The replicated states of the game
+ * The replicated states of the game.
  */
 UENUM(BlueprintType)
 enum class EGameState : uint8
@@ -25,25 +25,33 @@ class PONG_API APongGameState : public AGameState
 	GENERATED_BODY()
 
 public:
-	/** */
-	UFUNCTION(BlueprintCallable, BlueprintPure)
+	/** Returns the APongGameState::CurrentGameState property. */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "C++")
 	FORCEINLINE EGameState GetGameState() const { return CurrentGameState; }
 
-	/**  */
-	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
-	void SetGameState(EGameState NewGameState);
+	/** Set the new game state for the current game. */
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "C++")
+	void Server_SetGameState(EGameState NewGameState);
 
-	/** */
+	/** Returns the APongGameState::CountdownDelay property. */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "C++")
+	FORCEINLINE float GetCountdownDelay() const { return CountdownDelay; };
+
+protected:
+	/** Seconds to start the round. */
+	UPROPERTY(EditAnywhere)
+	float CountdownDelay = 3.F;
+
+	/** Store the game state for the current game. */
+	UPROPERTY(ReplicatedUsing = "OnRep_CurrentGameState")
+	EGameState CurrentGameState;
+
+	/** Called on the APongGameState::CurrentGameState property updating. */
 	UFUNCTION()
 	void OnRep_CurrentGameState();
 
-protected:
-	/** */
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentGameState)
-	EGameState CurrentGameState;
-
 	/** Start timer timer countdown on the clients UI. */
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, NetMulticast, Reliable)
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, NetMulticast, Reliable, Category = "C++", meta = (BlueprintProtected))
 	void Multicast_ShowCountdownWidget() const;
 
 	/** Returns properties that are replicated for the lifetime of the actor channel. */

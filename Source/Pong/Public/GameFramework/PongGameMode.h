@@ -18,32 +18,28 @@ public:
 	APongGameMode();
 
 	/** Start the timer that will call after d the APongGameMode::OnRoundStarted. */
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, meta = (BlueprintProtected))
-	void NextRound() const;
+	UFUNCTION(BlueprintCallable, Category = "C++", meta = (BlueprintProtected))
+	void NextRound();
 
 protected:
 	/** The array of each player start. */
-	UPROPERTY(BlueprintReadWrite, meta = (BlueprintProtected))
+	UPROPERTY(BlueprintReadWrite, Category = "C++", meta = (BlueprintProtected))
 	TArray<class APongPlayerController*> PlayerControllerArr;
 
 	/** Debug temporary class.*/
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "C++")
 	TSubclassOf<class APongBall> PongBallClass;
 
-	/** The APongGameMode::OnRoundStarted delay. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float CountdownDelay = 3.0F;
-
 	/** The required count of players to start. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "C++")
 	int32 PlayersCount = 2;
 
 	/** Store the pointer to the Pong Game State. */
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "C++")
 	class APongGameState* PongGameState;
 
 	/** Store the pointer to the Pong Ball. */
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "C++")
 	class APongBall* PongBall;
 
 	/** Called when the game starts or when spawned. */
@@ -77,6 +73,6 @@ protected:
 	virtual void Logout(AController* Exiting) override;
 
 	/** Called when the game is started. */
-	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
+	UFUNCTION(BlueprintCallable, Category = "C++", meta = (BlueprintProtected))
 	void OnRoundStarted();
 };

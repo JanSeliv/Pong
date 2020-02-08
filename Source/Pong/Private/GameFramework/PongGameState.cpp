@@ -5,20 +5,19 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
-void APongGameState::SetGameState_Implementation(EGameState NewGameState)
+// Set the new game state for the current game.
+void APongGameState::Server_SetGameState_Implementation(EGameState NewGameState)
 {
 	CurrentGameState = NewGameState;
-	if (HasAuthority())
-	{
-		OnRep_CurrentGameState();
-	}
+	OnRep_CurrentGameState();
 }
 
-bool APongGameState::SetGameState_Validate(EGameState NewGameState)
+bool APongGameState::Server_SetGameState_Validate(EGameState NewGameState)
 {
 	return true;
 }
 
+// Called on the APongGameState::CurrentGameState property updating.
 void APongGameState::OnRep_CurrentGameState()
 {
 	switch (CurrentGameState)
@@ -31,9 +30,14 @@ void APongGameState::OnRep_CurrentGameState()
 	}
 }
 
+//  Start timer timer countdown on the clients UI.
 void APongGameState::Multicast_ShowCountdownWidget_Implementation() const
 {
-	UE_LOG(LogTemp, Warning, TEXT("MULTICAST"));
+	if (!GetCountdownDelay())
+	{
+		return;	 //don't show timer with zero duration
+	}
+
 	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
 	const auto PongHUD = PC ? PC->GetHUD<APongHUD>() : nullptr;
 	if (PongHUD)

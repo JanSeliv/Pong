@@ -18,27 +18,36 @@ public:
 	/** Default constructor */
 	APongBall();
 
-	/** Set the velocity to the pong ball movement component.
-	 *  @param bRandCurrentDirectionAngle true if should rand angle, but keep ball's direction. */
-	UFUNCTION(BlueprintCallable, Server, Unreliable, WithValidation, Category = "C++")
-	void Server_UpdateVelocity(bool bRandCurrentDirectionAngle);
+	/** Returns the APongBall::CurrentDirection property. */
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	FORCEINLINE FVector GetCurrentDirection() const;
+
+	/** Calculate the  to the pong ball movement component.
+	 *	@param AngleDeg the new angle.
+	 *	@param bLocateToCenter if should reset the actor's location. Also reset's the speed. */
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, Category = "C++")
+	void Multicast_UpdateVelocity(float AngleDeg, bool bLocateToCenter = false);
+
+	/** Returns APongBall::MaxAngle property. */
+	UFUNCTION(BlueprintCallable, Category = "C++")
+	FORCEINLINE float GetMaxAngle() const { return MaxAngle; }
 
 protected:
 	/** The root static mesh component of the Pong Ball. */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (BlueprintProtected))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "C++", meta = (BlueprintProtected))
 	class UStaticMeshComponent* MeshComponent;
 
 	/** Updates the position of the root static mesh component.*/
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (BlueprintProtected))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "C++", meta = (BlueprintProtected))
 	class UProjectileMovementComponent* PongMovementComponent;
 
 	/** The maximal angle (in degrees) on bouncing between ball and player. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BlueprintProtected))
+	UPROPERTY(EditAnywhere)
 	float MaxAngle = 75.0F;
 
-	/** Store the ball movement direction. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BlueprintProtected))
-	FVector CurrentDirection;
+	/** The percent of speed increasing for each hit. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "C++", meta = (ClampMin = "0", ClampMax = "1", BlueprintProtected))
+	float SpeedMultiplier = 0.1F;
 
 	/** Called when the game starts or when spawned. */
 	virtual void BeginPlay() override;
@@ -53,4 +62,7 @@ protected:
 		FVector HitNormal,
 		FVector NormalImpulse,
 		const struct FHitResult& Hit) override;
+
+	/** Returns properties that are replicated for the lifetime of the actor channel. */
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 };

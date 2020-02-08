@@ -35,18 +35,26 @@ APongGameMode::APongGameMode()
 }
 
 // Start the timer before the OnRoundStarted event;
-void APongGameMode::NextRound() const
+void APongGameMode::NextRound()
 {
 	if (!PongGameState)
 	{
 		return;
 	}
 
-	PongGameState->SetGameState(EGameState::Countdown);
+	PongGameState->Server_SetGameState(EGameState::Countdown);
 
 	// The APongGameMode::OnRoundStarted delay.
-	FTimerHandle CountdownTimer;
-	GetWorld()->GetTimerManager().SetTimer(CountdownTimer, this, &APongGameMode::OnRoundStarted, CountdownDelay);
+	if (PongGameState->GetCountdownDelay())
+	{
+		FTimerHandle CountdownTimer;
+		GetWorld()->GetTimerManager().SetTimer(
+			CountdownTimer, this, &APongGameMode::OnRoundStarted, PongGameState->GetCountdownDelay());
+	}
+	else  //without delay
+	{
+		OnRoundStarted();
+	}
 }
 
 // Called when the game starts or when spawned.
@@ -128,6 +136,11 @@ void APongGameMode::Logout(AController* Exiting)
 // Called when the game is started.
 void APongGameMode::OnRoundStarted()
 {
-	PongBall->SetActorLocation(FVector::ZeroVector);
-	PongBall->Server_UpdateVelocity(true);
+	if (!ensureMsgf(PongBall, TEXT("APongGameMode::OnRoundStated: PongBall is not valid")))
+	{
+		return;
+	}
+
+	const float AngleDeg = FMath::RandRange(0.F, PongBall->GetMaxAngle());
+	PongBall->Multicast_UpdateVelocity(AngleDeg, true);
 }
