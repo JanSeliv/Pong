@@ -20,7 +20,7 @@ public:
 
 	/** Returns the APongBall::CurrentDirection property. */
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	FORCEINLINE FVector GetCurrentDirection() const;
+	FVector GetCurrentDirection() const;
 
 	/** Calculate the  to the pong ball movement component.
 	 *	@param AngleDeg the new angle.
