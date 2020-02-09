@@ -8,7 +8,7 @@
 //
 void UPongGameInstance::ServerTravel() const
 {
-	GetWorld()->ServerTravel("/Game/MainLevel?listen");
+	GetWorld()->ServerTravel("/Game/Maps/PersistentLevel?listen");
 }
 
 //
