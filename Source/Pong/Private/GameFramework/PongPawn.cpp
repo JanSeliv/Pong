@@ -4,7 +4,6 @@
 //---
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "UObject/ConstructorHelpers.h"
 
 // Default constructor.
@@ -15,6 +14,8 @@ APongPawn::APongPawn()
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
 	bAlwaysRelevant = true;
+	SetReplicates(true);
+	SetReplicateMovement(true);
 
 	// Initialize the  root static mesh component of the Pong Pawn.
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
@@ -31,12 +32,6 @@ APongPawn::APongPawn()
 void APongPawn::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (HasAuthority())
-	{
-		SetReplicates(true);
-		SetReplicateMovement(true);
-	}
 
 	if (MeshComponent)
 	{
