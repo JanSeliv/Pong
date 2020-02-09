@@ -43,11 +43,6 @@ APongBall::APongBall()
 	PongMovementComponent->bConstrainToPlane = true;
 	PongMovementComponent->SetPlaneConstraintAxisSetting(EPlaneConstraintAxisSetting::X);
 	MeshComponent->SetCollisionProfileName(TEXT("BlockAll"));
-	static ConstructorHelpers::FObjectFinder<UPhysicalMaterial> PM_PongFinder(TEXT("/Game/Materials/PM_Pong"));
-	if (PM_PongFinder.Succeeded())
-	{
-		MeshComponent->SetPhysMaterialOverride(PM_PongFinder.Object);
-	}
 }
 
 //  Returns the APongBall::CurrentDirection property.
@@ -61,7 +56,7 @@ void APongBall::Multicast_UpdateVelocity_Implementation(float AngleDeg, bool bLo
 {
 	if (!PongMovementComponent->Velocity.Size())
 	{
-		PongMovementComponent->Velocity = FMath::RandBool() ? FVector::RightVector : FVector::LeftVector;
+		PongMovementComponent->Velocity = FVector::UpVector;
 	}
 
 	if (bLocateToCenter)
@@ -78,7 +73,7 @@ void APongBall::Multicast_UpdateVelocity_Implementation(float AngleDeg, bool bLo
 		UKismetMathLibrary::DegCos(AngleDeg),
 		UKismetMathLibrary::DegSin(AngleDeg));
 	DirectionVector *= PongMovementComponent->Velocity.GetSignVector();
-	float LenMultiplier = FMath::Abs(PongMovementComponent->Velocity.Size());
+	const float LenMultiplier = FMath::Abs(PongMovementComponent->Velocity.Size());
 
 	// Updates the pong ball velocity of the movement component.
 	PongMovementComponent->Velocity = DirectionVector * LenMultiplier;
@@ -109,7 +104,8 @@ void APongBall::NotifyHit(
 {
 	Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
 
-	if (!PongMovementComponent)
+	if (!HasAuthority()	 //
+		|| !PongMovementComponent)
 	{
 		return;
 	}

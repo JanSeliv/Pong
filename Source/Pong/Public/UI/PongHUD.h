@@ -16,12 +16,16 @@ class PONG_API APongHUD : public AHUD
 
 public:
 	/** Start timer timer countdown on the clients UI. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, BlueprintPure = false)
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, BlueprintPure = false, Category = "C++")
 	void ShowCountdownWidget() const;
 
 	/** Check the players states and show their scores on the clients UI. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, BlueprintPure = false)
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, BlueprintPure = false, Category = "C++")
 	void UpdateScores() const;
+
+	/** Called when the game is finished to show the win\lose state on the clients UI. */
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, BlueprintPure = false, Category = "C++")
+	void ShowResultState() const;
 
 protected:
 	/** Called when the game starts or when spawned. */

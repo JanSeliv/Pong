@@ -20,11 +20,6 @@ APongPawn::APongPawn()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	RootComponent = MeshComponent;
 	MeshComponent->SetCollisionProfileName(TEXT("Pawn"));
-	static ConstructorHelpers::FObjectFinder<UPhysicalMaterial> PM_PongFinder(TEXT("/Game/Materials/PM_Pong"));
-	if (PM_PongFinder.Succeeded())
-	{
-		MeshComponent->SetPhysMaterialOverride(PM_PongFinder.Object);
-	}
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_PongPawnFinder(TEXT("/Game/Meshes/SM_PongPawn"));
 	if (SM_PongPawnFinder.Succeeded())
 	{
@@ -48,7 +43,6 @@ void APongPawn::BeginPlay()
 		MeshHeight = MeshComponent->Bounds.BoxExtent.Z;
 	}
 	const FRotator NewRotation =
-		FRotator(180.F, 0.F, 90.F) +
-		UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), FVector(-1, -1, -1));
+		UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), FVector::ZeroVector);
 	SetActorRotation(NewRotation);
 }

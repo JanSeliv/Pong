@@ -9,6 +9,14 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
+// Default constructor
+APongGameState::APongGameState()
+{
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bStartWithTickEnabled = false;
+}
+
 // Set the new game state for the current game.
 void APongGameState::Server_SetGameState_Implementation(EGameState NewGameState)
 {
@@ -38,7 +46,10 @@ void APongGameState::BeginPlay()
 	Super::BeginPlay();
 
 	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-	PongHUD = PC ? PC->GetHUD<APongHUD>() : nullptr;
+	if (PC)
+	{
+		PongHUD = PC->GetHUD<APongHUD>();
+	}
 }
 
 // Called on the APongGameState::CurrentGameState property updating.
@@ -47,8 +58,8 @@ void APongGameState::OnRep_CurrentGameState()
 	switch (CurrentGameState)
 	{
 		case EGameState::OnNextRound:
-			Multicast_ShowCountdownWidget();
 			Multicast_AddScore();
+			Multicast_ShowCountdownWidget();
 			break;
 		default:
 			break;
@@ -58,7 +69,8 @@ void APongGameState::OnRep_CurrentGameState()
 //  Start timer timer countdown on the clients UI.
 void APongGameState::Multicast_ShowCountdownWidget_Implementation() const
 {
-	if (!GetCountdownDelay())
+	if (!GetCountdownDelay()  // no timer to start on clients
+		|| IsMaxScored())	  // the game is over
 	{
 		return;	 //don't show timer with zero duration
 	}
@@ -69,7 +81,7 @@ void APongGameState::Multicast_ShowCountdownWidget_Implementation() const
 	}
 }
 
-void APongGameState::Multicast_AddScore_Implementation() const
+void APongGameState::Multicast_AddScore_Implementation()
 {
 	const float YDirection = PongBall ? PongBall->GetCurrentDirection().Y : 0.F;
 	if (!YDirection	 //
@@ -84,8 +96,14 @@ void APongGameState::Multicast_AddScore_Implementation() const
 
 	if (PlayerStateNo != INDEX_NONE)
 	{
-		PlayerArray[PlayerStateNo]->Score++;
+		const int32 NewScore = ++PlayerArray[PlayerStateNo]->Score;
 		PongHUD->UpdateScores();
+
+		if (NewScore >= MaxScore)
+		{
+			PongHUD->ShowResultState();
+			bIsMaxScored = true;
+		}
 	}
 }
 

@@ -17,6 +17,10 @@
 // Default constructor.
 APongGameMode::APongGameMode()
 {
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bStartWithTickEnabled = false;
+
 	GameStateClass = APongGameState::StaticClass();
 	PlayerControllerClass = APongPlayerController::StaticClass();
 	HUDClass = APongHUD::StaticClass();
@@ -59,12 +63,6 @@ void APongGameMode::NextRound()
 	}
 }
 
-// Function called every frame.
-void APongGameMode::Tick(float DeltaSeconds)
-{
-	Super::Tick(DeltaSeconds);
-}
-
 // Return the 'best' player start for this player to spawn.
 AActor* APongGameMode::ChoosePlayerStart_Implementation(AController* Player)
 {
@@ -90,11 +88,6 @@ bool APongGameMode::ReadyToEndMatch_Implementation()
 	return false;
 }
 
-// Restart the game, by default travel to the current map.
-void APongGameMode::RestartGame()
-{
-}
-
 // Called after a successful login.
 void APongGameMode::PostLogin(APlayerController* NewPlayer)
 {
@@ -115,12 +108,6 @@ void APongGameMode::PostLogin(APlayerController* NewPlayer)
 	{
 		OnGameStarted();
 	}
-}
-
-// Called whenever this actor is being removed from a level.
-void APongGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	Super::EndPlay(EndPlayReason);
 }
 
 // Called when a Controller with a PlayerState leaves the game or is destroyed.
@@ -149,7 +136,8 @@ void APongGameMode::OnGameStarted()
 // Called when the game is started.
 void APongGameMode::OnRoundStarted()
 {
-	if (!ensureMsgf(PongBall, TEXT("APongGameMode::OnRoundStated: PongBall is not valid")))
+	if (!ensureMsgf(PongBall, TEXT("APongGameMode::OnRoundStated: PongBall is not valid"))	//
+		|| !PongGameState || PongGameState->IsMaxScored())									// the game is over
 	{
 		return;
 	}
