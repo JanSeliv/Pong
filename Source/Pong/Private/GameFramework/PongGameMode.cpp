@@ -23,21 +23,11 @@ APongGameMode::APongGameMode()
 
 	GameStateClass = APongGameState::StaticClass();
 	PlayerControllerClass = APongPlayerController::StaticClass();
-	HUDClass = APongHUD::StaticClass();
 	DefaultPawnClass = APongPawn::StaticClass();
 	PongBallClass = APongBall::StaticClass();
 	PlayerStateClass = APongPlayerState::StaticClass();
-
-#if WITH_EDITOR
-	if (GIsEditor)
-	{
-		static ConstructorHelpers::FClassFinder<AActor> BP_PongHUDFinder(TEXT("/Game/Blueprints/UI/BP_PongHUD"));
-		if (BP_PongHUDFinder.Succeeded())
-		{
-			HUDClass = BP_PongHUDFinder.Class;
-		}
-	}
-#endif
+	static ConstructorHelpers::FClassFinder<AActor> BP_PongHUDFinder(TEXT("/Game/Blueprints/UI/BP_PongHUD"));
+	HUDClass = BP_PongHUDFinder.Succeeded() ? BP_PongHUDFinder.Class : APongHUD::StaticClass();
 }
 
 // Start the timer before the OnRoundStarted event;
