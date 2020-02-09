@@ -3,6 +3,7 @@
 #include "GameFramework/PongPawn.h"
 //---
 #include "Components/StaticMeshComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -46,4 +47,8 @@ void APongPawn::BeginPlay()
 	{
 		MeshHeight = MeshComponent->Bounds.BoxExtent.Z;
 	}
+	const FRotator NewRotation =
+		FRotator(180.F, 0.F, 90.F) +
+		UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), FVector(-1, -1, -1));
+	SetActorRotation(NewRotation);
 }

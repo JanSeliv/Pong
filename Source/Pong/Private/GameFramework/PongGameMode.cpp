@@ -6,6 +6,7 @@
 #include "GameFramework/PongGameState.h"
 #include "GameFramework/PongPawn.h"
 #include "GameFramework/PongPlayerController.h"
+#include "GameFramework/PongPlayerState.h"
 #include "UI/PongHUD.h"
 //---
 #include "Engine/World.h"
@@ -21,6 +22,7 @@ APongGameMode::APongGameMode()
 	HUDClass = APongHUD::StaticClass();
 	DefaultPawnClass = APongPawn::StaticClass();
 	PongBallClass = APongBall::StaticClass();
+	PlayerStateClass = APongPlayerState::StaticClass();
 
 #if WITH_EDITOR
 	if (GIsEditor)

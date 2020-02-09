@@ -71,6 +71,6 @@ void APongPlayerController::Multicast_MoveDown_Implementation(float ScaleValue)
 	{
 		FVector DeltaVector(FVector::ZeroVector);
 		DeltaVector.Z = GetWorld()->GetDeltaSeconds() * ScaleValue * SpeedSensitivity;
-		PawnObj->AddActorLocalOffset(DeltaVector, true);
+		PawnObj->AddActorWorldOffset(DeltaVector, true);
 	}
 }
